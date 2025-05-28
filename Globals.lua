@@ -6,7 +6,23 @@ local Math = require("Math");
 ---@alias vector2 {x: number, y: number}
 ---@alias vector3 {x: number, y: number, z: number}
 
--- utility
+--!UTILITY
+-- environment
+_G.DEBUGGING = true;
+_G.PRIORITY = 1;
+_G.IGNORE_LOWER_PRIORITY = false;
+--!NOTE about priorities (Debugger class);
+--1 used for normal debugging, ideally outside of specific functions
+--2 used for specific functions
+--3 used for very specific functions and checking if some conditions are present
+--4 used for loops
+--5 used for annoying loops (e.g. love.draw()), and as final resort
+--!PRIORITY has to be set according to the needs. If one wants, they can even set a function associated to
+--!key binds such that it changes PRIORITY at run-time.
+--!IGNORE_LOWER_PRIORITY is especially useful in cases level 4 and 5 priorities are needed and the user wants
+--!to exclude frequent Debug messages that aren't relevant, after having checked they aren't the cause of the bug.
+
+-- other
 _G.Colour = {};
 _G.Debugger = {};
 
@@ -85,16 +101,44 @@ _G.Enum = {
     },
 }
 
---Prints a message when global variable *DEBUGGING* is set to true
-function Debugger.msg(msg)
-    if DEBUGGING then
+Debugger.sep = "-------------------------";
+
+--Prints a message when global variable *DEBUGGING* is set to true.<br>
+--*priority* determines the necessity of the message. It makes the print statement run only when its value 
+--is lower than global variable *PRIORITY*.<br> 
+--If *IGNORE_LOWER_PRIORITY* is set to true, then only priorities equal to *PRIORITY* will be printed.
+---@param msg string
+---@param priority number?
+function Debugger.msg(msg, priority)
+    priority = priority or 1;
+
+    if DEBUGGING and PRIORITY >= priority then
+        if IGNORE_LOWER_PRIORITY then
+            if priority == PRIORITY then
+                print(msg);
+            end
+            return;
+        end
         print(msg);
     end
 end
 
---Prints a message when global variable *DEBUGGING* is set to true and the condition is met
-function Debugger.conditional(condition, msg)
-    if condition and DEBUGGING then
+--Prints a message when global variable *DEBUGGING* is set to true and the condition is met, as well
+--as when *priority* is lower than *PRIORITY*, and if *IGNORE_LOWER_PRIORITY* is set to true then when
+--*priority* is equal to *PRIORITY*
+---@param condition boolean
+---@param msg string
+---@param priority number?
+function Debugger.conditional(condition, msg, priority)
+    priority = priority or 1;
+
+    if DEBUGGING and PRIORITY >= priority then
+        if IGNORE_LOWER_PRIORITY then
+            if priority == PRIORITY then
+                print(msg);
+            end
+            return;
+        end
         print(msg);
     end
 end

@@ -31,13 +31,13 @@ function Math.round(n)
     end
 end
 
--- Creates a 3d vector. Note: all vectors are considered to be 3d. If the 3rd parameter is not necessary, omit.
--- Multiplying 2 vectors means taking their dot product.
--- Dividing 2 vectors means taking their cross product.
-
+--!VECTORS--
 Math.vec2 = {};
 Math.vec3 = {};
 
+-- Creates 2d vector.
+-- Multiplying 2 vectors means taking their dot product.
+-- Dividing 2 vectors means taking their cross product.
 ---@param x number?
 ---@param y number?
 ---@return {x: number, y: number, a: number, r: number}

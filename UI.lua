@@ -34,27 +34,27 @@ will be automatically generated around it) and *callback*, instead, is the funct
 the button region.<br>
 *image* is a string containg the address to the image to display.]]--
 function UI.new(settings)
-    Debugger.msg("-----------------------");
-    Debugger.msg("UI.new() - UI created\n");
+    Debugger.msg(Debugger.sep);
+    Debugger.msg("UI.new() - UI created\n", 1);
 
     ---@type table
     local newUI = {}
     local cache = {}; -- caching canvas and font, if existing
 
     local parent = settings.parent or nil;
-    Debugger.conditional(settings.parent == nil, "UI.new() - defaulted parent to "..tostring(parent).."\n");
+    Debugger.conditional(settings.parent == nil, "UI.new() - defaulted parent to "..tostring(parent).."\n", 2);
     assert(type(parent) == "nil" or type(parent) == "table");
 
     local mode = settings.mode or Enum.UI.absolute;
-    Debugger.conditional(settings.mode == nil, "UI.new() - defaulted mode to "..tostring(mode).."\n");
+    Debugger.conditional(settings.mode == nil, "UI.new() - defaulted mode to "..tostring(mode).."\n", 2);
     assert(type(mode) == "string", "UI.new() - mode must be a string");
 
     local anchor = settings.anchor or Math.vec2.simple(0,0);
-    Debugger.conditional(settings.anchor == nil, "UI.new() - defaulted anchor to "..tostring(anchor).."\n");
+    Debugger.conditional(settings.anchor == nil, "UI.new() - defaulted anchor to "..tostring(anchor).."\n", 2);
     assert(type(anchor) == "table", "UI.new() - anchor must be a table. Use Math.vec2.simple()\n");
 
     local pos = settings.pos or Math.vec3.simple(0,0,1);
-    Debugger.conditional(settings.pos == nil, "UI.new() - defaulted pos to "..tostring(pos).."\n");
+    Debugger.conditional(settings.pos == nil, "UI.new() - defaulted pos to "..tostring(pos).."\n", 2);
     assert(type(pos) == "table", "UI.new() - pos must be a table\n");
     if parent then -- checking table content such that it contains the necessary keys
         pos.z = parent.z + settings.pos.z;
@@ -62,7 +62,7 @@ function UI.new(settings)
     end
 
     local size = settings.size or Math.vec2.simple(1,1);
-    Debugger.conditional(settings.size == nil, "UI.new() - defaulted size to "..tostring(size).."\n");
+    Debugger.conditional(settings.size == nil, "UI.new() - defaulted size to "..tostring(size).."\n", 2);
     assert(type(size) == "table", "UI.new() - size must be a table with 2 elements (x,y)\n");
 
     if mode == Enum.UI.relative then
@@ -84,11 +84,11 @@ function UI.new(settings)
     end
 
     local rgba = settings.rgba or Colour.new();
-    Debugger.conditional(settings.rgba == nil, "UI.new() - defaulted rgba to "..tostring(rgba).."\n");
+    Debugger.conditional(settings.rgba == nil, "UI.new() - defaulted rgba to "..tostring(rgba).."\n", 2);
     assert(type(rgba) == "table", "UI.new() - rgba must be a table\n");
 
     local element = settings.element or Enum.UI.frame;
-    Debugger.conditional(settings.element == nil, "UI.new() - defaulted element to "..tostring(element).."\n");
+    Debugger.conditional(settings.element == nil, "UI.new() - defaulted element to "..tostring(element).."\n", 2);
     assert(type(element) == "string", "UI.new() - element must be a string. Use Enum.UI.frame or Enum.UI.canvas\n");
     if element == Enum.UI.canvas then
         canvas = love.graphics.newCanvas(settings.size.x, settings.size.y);
@@ -103,7 +103,7 @@ function UI.new(settings)
     end
 
     local text = settings.text or {content = "", rgba = Colour.new(), font = Enum.Fonts.first, size = 12};
-    Debugger.conditional(settings.text == nil, "UI.new() - defaulted text.content to "..tostring(text.content).."\n");
+    Debugger.conditional(settings.text == nil, "UI.new() - defaulted text.content to "..tostring(text.content).."\n", 2);
     assert(type(text) == "table", "UI.new() - text must be a table\n");
     assert(type(text.content) == "string", "UI.new() - text.content must be a string\n");
     assert(type(text.rgba) == "table", "UI.new() - text.rgba must be a rgba table. Create using Colour.new(r,g,b,a)\n");
@@ -115,18 +115,18 @@ function UI.new(settings)
     end
 
     local clickCallback = settings.clickCallback or {active = false, callback = nil};
-    Debugger.conditional(settings.clickCallback == nil, "UI.new() - defaulted clickCallback.active to "..tostring(clickCallback.active).."\n");
+    Debugger.conditional(settings.clickCallback == nil, "UI.new() - defaulted clickCallback.active to "..tostring(clickCallback.active).."\n", 2);
     assert(type(clickCallback) == "table", "UI.new() - clickable must be a boolean\n");
 
     local image = settings.image or "";
-    Debugger.conditional(settings.image == nil, "UI.new() - defaulted image to "..tostring(image).."\n");
+    Debugger.conditional(settings.image == nil, "UI.new() - defaulted image to "..tostring(image).."\n", 2);
     assert(type(image) == "string", "UI.new() - image must be a string containing the image's address\n");
     if image ~= "" then
         cache.image = love.graphics.newImage(image);
     end
 
     local visible = settings.visible or true;
-    Debugger.conditional(settings.visible == nil, "UI.new() - defaulted visible to "..tostring(visible).."\n");
+    Debugger.conditional(settings.visible == nil, "UI.new() - defaulted visible to "..tostring(visible).."\n", 2);
     assert(type(visible) == "boolean", "UI.new() - visible must be a boolean\n");
 
     newUI.element = element;
@@ -254,7 +254,9 @@ function UI.update()    -- TODO: create tweens in here and track them
 end
 
 function UI.render()
+    Debugger.msg("UI.render()", 5);
     for _, element in pairs(activeUI) do
+        Debugger.msg("UI.render() - activeUI element found", 4);
         if element.visible then
             if element.element == Enum.UI.frame then
                 love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);

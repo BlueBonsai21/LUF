@@ -27,7 +27,7 @@ love .
 Quick example on how to use it:
 - After having installed the framework, in a separate file:
 ```lua
-local UI = require(UI.lua);
+local UI = require("UI");
 
 -- this will be creating a canvas positioned with its centre in (0.5,0.5), and a size of (0.5,0.5)
 UI.new({element = Enum.UI.Canvas, pos = Math.vec3.simple(.5,.5,1), size = Math.vec2.simple(.5,.5), anchor = Math.vec2.simple(0.5,0.5)});
