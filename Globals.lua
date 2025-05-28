@@ -6,11 +6,6 @@ local Math = require("Math");
 ---@alias vector2 {x: number, y: number}
 ---@alias vector3 {x: number, y: number, z: number}
 
---!TABLES--
--- rendering purposes
-_G.activeUI = {}; -- UIs being actively rendered
-_G.activeEntities = {}; -- Entities being actively rendered
-
 -- utility
 _G.Colour = {};
 _G.Debugger = {};

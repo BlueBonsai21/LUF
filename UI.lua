@@ -3,6 +3,8 @@ UI = {}
 --!SETUP--
 local zModified = false; -- refers whether the active tablelib's been modified so it needs to be sorted again for z-index purpose (used to save memory)
 
+local activeUI = {};
+
 --!MAIN--
 
 ---@param settings {element: string?, mode: string?, pos: vector3?, size: vector2?, anchor: vector2?, image: string, rgba: colour?, parent: table?, text: {content: string, rgba: colour, font: string, size: number}?, clickCallback: {active: boolean, callback: function}?, visible: boolean?}
@@ -252,7 +254,7 @@ function UI.update()    -- TODO: create tweens in here and track them
 end
 
 function UI.render()
-    for _, element in ipairs(activeUI) do
+    for _, element in pairs(activeUI) do
         if element.visible then
             if element.element == Enum.UI.frame then
                 love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);
