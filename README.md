@@ -13,15 +13,15 @@ A simple UI framework for LOVE2D. Made as a person project.
 ## 🛠️ Installation
 
 ```bash
+# Install dependencies
+- LOVE2D (https://love2d.org/#download)
+
 # Clone the repo
 git clone https://github.com/BlueBonsai21/LUF
 cd your_repo
 
-# Install dependencies
-- LOVE2D (https://love2d.org/#download)
-
 # Run locally
-love 
+love .
 ```
 
 Quick example on how to use it:
