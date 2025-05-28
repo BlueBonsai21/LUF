@@ -3,7 +3,7 @@ UI = {}
 --!SETUP--
 local zModified = false; -- refers whether the active tablelib's been modified so it needs to be sorted again for z-index purpose (used to save memory)
 
-local activeUI = {};
+_G.activeUI = {};
 
 --!MAIN--
 
