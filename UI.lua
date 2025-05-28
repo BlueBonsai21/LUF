@@ -8,8 +8,6 @@ local zModified = false; -- refers whether the active tablelib's been modified s
 ---@param settings {element: string?, mode: string?, pos: vector3?, size: vector2?, anchor: vector2?, image: string, rgba: colour?, parent: table?, text: {content: string, rgba: colour, font: string, size: number}?, clickCallback: {active: boolean, callback: function}?, visible: boolean?}
 ---@return table
 --[[
-**UNRESOLVED BUG: setting the y size of a child of a vertical element to 1, while this child contains text appears 
-to be causing an extreme memory leak for unknown reasons.**<br>
 No parameters are strictly required.<br>
 Creates a UI instance, given a table containing the following:
 *element* from Enum.UI (frame or canvas);<br>

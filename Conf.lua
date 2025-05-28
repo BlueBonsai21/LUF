@@ -6,7 +6,7 @@ function love.conf(game)
     game.console = false;
     game.externalstorage = false; -- Android only
     game.gammacorrect = true;
-    game.window.title = "Hecstasy";
+    game.window.title = "LUF";
     game.window.width = 800;
     game.window.height = 700;
     game.window.minwidth = game.window.width;

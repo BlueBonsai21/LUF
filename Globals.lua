@@ -88,9 +88,6 @@ _G.Enum = {
         light_yellow = Colour.new(231,236,163,1),
         gold = Colour.new(255,215,0,1),
     },
-    Sprites = {
-        trainer = love.graphics.newImage("assets/sprites/player.jpg"),
-    }
 }
 
 --Prints a message when global variable *DEBUGGING* is set to true
