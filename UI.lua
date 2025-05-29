@@ -1,10 +1,5 @@
 UI = {}
 
---!SETUP--
-local zModified = false; -- refers whether the active tablelib's been modified so it needs to be sorted again for z-index purpose (used to save memory)
-
-_G.activeUI = {};
-
 --!MAIN--
 
 ---@param settings {element: string?, mode: string?, pos: vector3?, size: vector2?, anchor: vector2?, image: string, rgba: colour?, parent: table?, text: {content: string, rgba: colour, font: string, size: number}?, clickCallback: {active: boolean, callback: function}?, visible: boolean?}
@@ -103,7 +98,7 @@ function UI.new(settings)
     end
 
     local text = settings.text or {content = "", rgba = Colour.new(), font = Enum.Fonts.first, size = 12};
-    Debugger.conditional(settings.text == nil, "UI.new() - defaulted text.content to "..tostring(text.content).."\n", 2);
+    Debugger.conditional(settings.text == nil, "UI.new() - defaulted text.content to \"\"\n", 2);
     assert(type(text) == "table", "UI.new() - text must be a table\n");
     assert(type(text.content) == "string", "UI.new() - text.content must be a string\n");
     assert(type(text.rgba) == "table", "UI.new() - text.rgba must be a rgba table. Create using Colour.new(r,g,b,a)\n");
@@ -119,7 +114,7 @@ function UI.new(settings)
     assert(type(clickCallback) == "table", "UI.new() - clickable must be a boolean\n");
 
     local image = settings.image or "";
-    Debugger.conditional(settings.image == nil, "UI.new() - defaulted image to "..tostring(image).."\n", 2);
+    Debugger.conditional(settings.image == nil, "UI.new() - defaulted image to \"\"\n", 2);
     assert(type(image) == "string", "UI.new() - image must be a string containing the image's address\n");
     if image ~= "" then
         cache.image = love.graphics.newImage(image);
@@ -143,13 +138,18 @@ function UI.new(settings)
     newUI.children = {};
 
     --!METHODS--
+
+    ---Move the UI element to a *pos*ition given by Math.vec2.simple(x,y).<br>
+    ---Used the same mode that's been used to create the table. Can be re-assigned via table.mode.<br>
+    ---CAN NOT modify z-index; to do that use table:zindex().
     ---@param pos vector2
-    ---@param mode string?
+    ---@param time number?
     ---@return nil
-    -- Move the UI element to a *pos*ition given by Math.vec2.simple(x,y), with a *mode* (default: absolute);
-    function newUI:move(pos, mode) -- TODO: add lerps
-        mode = mode or Enum.UI.absolute;
-        assert(type(mode) == string, "UI.new():move() - mode must be a string. Use Enum.UI.absolute or Enum.UI.relative\n");
+    function newUI:move(pos, time)
+        mode = self.mode;
+
+        time = time or 0;
+        assert(type(time) == "number" and time >= 0, "UI.new():move() - time must be a positive integer number\n");
 
         if mode == "absolute" then
             self.x = pos.x;
@@ -165,20 +165,21 @@ function UI.new(settings)
         end
     end
 
+    -- Resize the element to a new size. Uses the mode defined on instantiation. Can be modified via element.mode;
     ---@param x number
     ---@param y number
-    ---@param mode string?
     ---@return nil
-    function newUI:resize(x, y, mode) --! TODO: add the possibility of a smooth transition + add relativity to the (eventual) parent
-        mode = mode or Enum.UI.relative;
-        if type(mode) ~= type(Enum.UI.relative) then
-            print("newUI:resize() - (defaulted) mode = absolute");
-            mode = Enum.UI.absolute;
-        end
+    function newUI:resize(x, y)
+        mode = self.mode;
 
         if mode == Enum.UI.absolute then
-            self.size.x = x;
-            self.size.y = y;
+            if self.parent then
+                self.size.x = x*self.parent.size.x;
+                self.size.y = y*self.parent.size.y;
+            else
+                self.size.x = x;
+                self.size.y = y;
+            end
         else
             x, y = Math.round(x), Math.round(y);
             self.x = x;
@@ -204,12 +205,68 @@ function UI.new(settings)
         print(self.size.x, self.size.y, ratio);
         return;
     end
+    
+
+    ---Used to sort newUI global table upon creation 
+    ---@return nil
+    function newUI:sort()
+        if #g_activeUI == 0 then
+            table.insert(g_activeUI, self);
+            return
+        end
+        
+        local left, right = 1, #g_activeUI;
+        local insertPos = #g_activeUI + 1;
+        
+        while left <= right do -- assuming all shit is ordered when table is encountered; let's cross fingers, haha
+            local mid = math.floor((left + right) / 2);
+            if newUI[mid].zindex <= self.zindex then
+                left = mid + 1;
+            else
+                insertPos = mid;
+                right = mid - 1;
+            end
+        end
+        
+        table.insert(g_activeUI, insertPos, self);
+        Debugger.msg("Sorted new element", 3);
+    end
+
+    ---Changes the UI element's z-index to the specified value.
+    ---@param z number
+    ---@return nil
+    function newUI:zindex(z)
+        assert(z and type(z) == "number", "UI.new():zindex() - must provide a number value for the new z-index");
+
+        if z == self.zindex then return end;
+
+        local insertion = -1;
+        for i, element in ipairs(g_activeUI) do
+            if element.zindex <= z then
+                insertion = element.zindex + 1; -- we insert right after
+            end
+
+            if element == self then
+                table.remove(g_activeUI, i);
+                for j=1, #element.children, 1 do
+                    table.remove(g_activeUI, i+1); -- since the table is ordered we can remove each next elements, the children
+                end
+            end
+        end
+        if insertion == -1 then return end;
+
+        table.insert(g_activeUI, insertion, self);
+        for i=1, #self.children, 1 do
+            --insertion+i since activeUI[insertion] is occupied by self, and placed occupy as we add more children to the table
+            table.insert(g_activeUI, insertion+i, self.children[i]);
+        end
+    end
 
     ---@return nil
     function newUI:destroy()
-        for i, element in activeUI do
+        for i, element in g_activeUI do
             if element == self then
-                table.remove(activeUI, i);
+                table.remove(g_activeUI, i);
             end
         end
 
@@ -218,45 +275,40 @@ function UI.new(settings)
         end
 
         self = nil;
-        zModified = true;
+        ordered = false;
     end
 
-    table.insert(activeUI, newUI);
-    zModified = true;
+    newUI:sort();
     return newUI;
 end
 
 -- temporarily make all the active UIs invisible
 function UI.hide()
-    for _, element in ipairs(activeUI) do
+    for _, element in ipairs(g_activeUI) do
         element.visible = false;
     end
 end
 
 -- re-enable all the invisible UIs
 function UI.show()
-    for _, element in ipairs(activeUI) do
+    for _, element in ipairs(g_activeUI) do
         element.visible = true;
     end
 
-    zModified = true;
+    ordered = false;
 end
 
-function UI.update()    -- TODO: create tweens in here and track them
-    if zModified then
-        if #activeUI > 1 then
-            table.sort(activeUI, function(a, b) -- sorting the z-indices
-                return a.z < b.z;
-            end);
-            zModified = false;
-        end
+---@param dt number
+function UI.update(dt)
+    for _, event in ipairs(g_UIEvents) do
+        -- TODO: create tweens in here and track them
     end
 end
 
 function UI.render()
     Debugger.msg("UI.render()", 5);
-    for _, element in pairs(activeUI) do
-        Debugger.msg("UI.render() - activeUI element found", 4);
+    for _, element in ipairs(g_activeUI) do
+        Debugger.msg("UI.render() - g_activeUI element found", 4);
         if element.visible then
             if element.element == Enum.UI.frame then
                 love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);

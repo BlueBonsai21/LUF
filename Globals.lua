@@ -7,9 +7,13 @@ local Math = require("Math");
 ---@alias vector3 {x: number, y: number, z: number}
 
 --!UTILITY
--- environment
+-- inputs
+_G.KEYBOARD_ACTIVE = true;
+_G.MOUSE_ACTIVE = true;
+
+-- debugging
 _G.DEBUGGING = true;
-_G.PRIORITY = 1;
+_G.PRIORITY = 3;
 _G.IGNORE_LOWER_PRIORITY = false;
 --!NOTE about priorities (Debugger class);
 --1 used for normal debugging, ideally outside of specific functions
@@ -21,6 +25,11 @@ _G.IGNORE_LOWER_PRIORITY = false;
 --!key binds such that it changes PRIORITY at run-time.
 --!IGNORE_LOWER_PRIORITY is especially useful in cases level 4 and 5 priorities are needed and the user wants
 --!to exclude frequent Debug messages that aren't relevant, after having checked they aren't the cause of the bug.
+
+-- UI and inputs
+_G.g_activeUI = {};
+_G.g_UIEvents = {};
+_G.g_KeyboardCallbacks = {}; -- contains tables like: [key] = callback_function();
 
 -- other
 _G.Colour = {};
@@ -132,7 +141,7 @@ end
 function Debugger.conditional(condition, msg, priority)
     priority = priority or 1;
 
-    if DEBUGGING and PRIORITY >= priority then
+    if DEBUGGING and PRIORITY >= priority and condition then
         if IGNORE_LOWER_PRIORITY then
             if priority == PRIORITY then
                 print(msg);

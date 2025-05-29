@@ -174,4 +174,44 @@ function Math.vec3.simple(x,y,z)
     return vec;
 end
 
+--!SORTING--
+Math.sort = {};
+
+--O(n*log(n));
+---@param arr table
+function Math.sort.quicksort(arr)
+    if #arr <= 1 then
+        return arr;
+    else
+        local pivot_idx = math.random(1, #arr);
+        local pivot = arr[pivot_idx];
+        local less = {};
+        local greater = {};
+        
+        for i = 1, #arr do
+            if i ~= pivot_idx then
+                if arr[i] <= pivot then
+                    table.insert(less, arr[i]);
+                else
+                    table.insert(greater, arr[i]);
+                end
+            end
+        end
+        
+        local sorted_less = Math.sort.quicksort(less);
+        local sorted_greater = Math.sort.quicksort(greater);
+        
+        local result = {}
+        for i = 1, #sorted_less do
+            table.insert(result, sorted_less[i]);
+        end
+        table.insert(result, pivot);
+        for i = 1, #sorted_greater do
+            table.insert(result, sorted_greater[i]);
+        end
+        
+        return result;
+    end
+end
+
 return Math;
