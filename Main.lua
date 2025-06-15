@@ -9,7 +9,7 @@ local Math = require("Math");
 _G.Enum = {
     mode = {
         absolute = 0,
-        relative = 0,
+        relative = 1,
     },
     type = {
         canvas = "canvas",
@@ -17,6 +17,9 @@ _G.Enum = {
         text = "text",
         image = "image",
     },
+    fonts = {
+        lollygag = "assets/fonts/font.ttf",
+    }
 }
 
 --!MAIN--
@@ -24,15 +27,19 @@ function love.load()
     local settings = {
         x = .5,
         y = .5,
-        size = Math.vec2(.3,.3);
-        rgba = Colour.new(.3,.3,.8,1);
+        size = Math.vec2(.3,.3),
+        rgba = Colour.new(.3,.3,.8,1),
+        anchor = Math.vec2(.5,.5),
+        string = "Hello, World",
+        font = Enum.fonts.lollygag,
     }
-    UI.ChangeMode("relative");
-    local rect = UI.rect(settings);
-    UI.ChangeMode("absolute");
+    UI.SetMode("relative");
+    local rect = UI.text(settings);
+    UI.SetMode("absolute");
 end
 
 function love.update()
+    love.window.setTitle("LUF - FPS: "..love.timer.getFPS());
 end
 
 function love.draw()
