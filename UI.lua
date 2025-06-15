@@ -13,19 +13,18 @@ local UI = {
             z = 0,
             anchor = Math.vec2(),
             size = Math.vec2(1, 1),
-            rgba = Colour.new(),
+            rgba = Colour.new(1,1,1,1),
             children = {},
             cache = {},
         },
-        __tostring = function()
-            return unpack(t);
-        end
     },
     active = {},
-    inactive = {},
 };
 
 local mode = 0; -- 0 = absolute, 1 = relative
+---Sets the mode to "absolute" (or 0), or "relative" (or 1) for all the following UI elements upon creation . <br>
+---By passing no arguments it's defaulted to "absolute" (0).
+---@param newMode string | number?
 function UI.SetMode(newMode)
     newMode = newMode or 0;
     assert(newMode == 0 or newMode == 1 or newMode == "absolute" or newMode == "relative", "UI.ChangeMode() - mode has to be a valid number/string\n");
@@ -36,30 +35,15 @@ function UI.SetMode(newMode)
     end
 end
 
-local function OrderActive()
-    local parents = {};
-    for _, element in ipairs(UI.active) do
-        if not element.Parent then
-            table.insert(parents, element);
-        end
-    end
-    table.sort(parents, function(a,b)
-     return a.z < b.z;
-    end);
-    for parentIndex, parent in pairs(parents) do
-        if #parent.children > 0 then
-            table.sort(parent.children, function(a, b)
-                return a.z < b.z;
-            end);
+local autocentre = false;
+---If set to true, all UI elements will automatically have set their anchor point to {0.5,0.5}.<br>
+---By passing no argument, it's defaulted to false.
+---@param active boolean?
+function UI.Autocentre(active)
+    active = active or false;
+    assert(type(active) == "boolean", "UI.Autocentre() - active must be a boolean\n");
 
-            for childIndex, child in pairs (parent.children) do
-                table.insert(parents, parentIndex + childIndex,child);
-            end
-        end
-    end
-
-    children = nil;
-    parents = nil;
+    autocentre = active;
 end
 
 local function Create(settings)
@@ -70,7 +54,6 @@ local function Create(settings)
         assert(type(settings.visible) == "boolean", "UI.lua - visible must be a boolean");
         newUI.visible = settings.visible;
     end
-
     
     if settings.parent then
         assert(type(settings.parent) == "table" and settings.parent.x and settings.parent.y and settings.parent.size, "UI.lua - provided parent is not a valid parent; make sure to pass a UI reference, or nil\n");
@@ -94,11 +77,15 @@ local function Create(settings)
         end
     end
 
-    if settings.anchor then
-        assert(type(settings.anchor) == "table" and settings.anchor.x and settings.anchor.y, "UI.lua - anchor must be a vec2 between 0 and 1\n");
-        settings.anchor.x = Math.clamp(settings.anchor.x, 0, 1);
-        settings.anchor.y = Math.clamp(settings.anchor.y, 0, 1);
-        newUI.anchor = settings.anchor;
+    if not autocentre then
+        if settings.anchor then
+            assert(type(settings.anchor) == "table" and settings.anchor.x and settings.anchor.y, "UI.lua - anchor must be a vec2 between 0 and 1\n");
+            settings.anchor.x = Math.clamp(settings.anchor.x, 0, 1);
+            settings.anchor.y = Math.clamp(settings.anchor.y, 0, 1);
+            newUI.anchor = settings.anchor;
+        end
+    else
+        newUI.anchor = Math.vec2(.5,.5);
     end
     
     if settings.x then
@@ -153,33 +140,44 @@ local function Create(settings)
         end
     end
 
-    if newUI.visible then
-        table.insert(UI.active, newUI);
-    else
-        table.insert(UI.inactive, newUI);
-    end
-
     function newUI:activate()
         self.visible = true;
-        if UI.inactive[newUI] then
-            UI.inactive[newUI] = nil;
-            table.insert(UI.active, newUI);
-        end
     end
 
     function newUI:deactivate()
         self.visible = false;
-        if UI.active[newUI] then
-            UI.active[newUI] = nil;
-            table.insert(UI.inactive, newUI);
-        end
     end
 
-    --OrderActive();
+    local function Initialise()
+        local parentIndex = 0;
+        for index, element in pairs(UI.active) do
+            if newUI.parent and element == newUI.parent then
+                parentIndex = index;
+            end
+        end
+        for i=parentIndex+1, #UI.active-parentIndex, 1 do
+            if UI.active[i].parent then
+                if UI.active[i].z > newUI.z then
+                    table.insert(UI.active, i, newUI);
+                    return;
+                end
+            else
+                break;
+            end
+        end
+        table.insert(UI.active, newUI);
+    end
+
+    Initialise(); --! TODO check if it works well, logically
+
+    print(newUI);
 
     return newUI;
 end
 
+---Creates a rectangle, given a settings table.
+---@param settings any
+---@return table
 function UI.rect(settings)
     local rect = Create(settings);
     rect.type = Enum.type.frame;
@@ -187,13 +185,29 @@ function UI.rect(settings)
     return rect;
 end
 
+---Creates a circle, given a settings table.<br>
+---The radius of the circle can be assigned via *settings.radius* or it'll be defaulted to *settings.x*.
+---@param settings table
+---@return table
 function UI.circle(settings)
+    -- using circle.size.x as radius, although settings.radius can overwrite it
     local circle = Create(settings);
-    circle.type = Enum.type.frame;
+    circle.type = Enum.type.circle;
 
+    if settings.radius then
+        assert(type(settings.radius) == "number", "UI.circle() - radius must be a number\n");
+        circle.radius = settings.radius;
+    else
+        circle.radius = circle.size.x;
+    end
+    
     return circle;
 end
 
+---Creates a text label, given a *settings.string* key.<br>
+---Can assign a font via *settings.font*; if not provided it's defaulted to built-in LOVE2D default font.
+---@param settings table
+---@return table
 function UI.text(settings)
     local text = Create(settings);
     text.type = Enum.type.text;
@@ -217,23 +231,49 @@ function UI.text(settings)
     return text;
 end
 
+---Creates an image label, given a *settings.source* key, representing the path to the image asset.<br>
+---@param settings table
+---@return table
+function UI.image(settings)
+    local img = Create(settings);
+    img.type = Enum.type.image;
+
+    if settings.source then
+        assert(type(settings.source) == string, "UI.image() - source must be a string containing the path to the image\n");
+        img.source = love.graphics.newImage(settings.source);
+    else
+        error("UI.image() - must provide a string path to the image asset\n");
+        img = nil;
+    end
+
+    return img;
+end
+
 function UI.render()
     for _, element in pairs(UI.active) do
         if element.visible and element.type then
+            love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);
+
             if element.type == Enum.type.frame then
-                love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);
                 love.graphics.rectangle("fill", element.x, element.y, element.size.x, element.size.y);
-                love.graphics.setColor(0,0,0,1);
             end
             
             if element.type == Enum.type.text then
                 if element.cache.font then
                     love.graphics.setFont(element.cache.font);
                 end 
-                love.graphics.setColor(element.rgba.r, element.rgba.g, element.rgba.b, element.rgba.a);
                 love.graphics.print(element.string, element.x, element.y);
-                love.graphics.setColor(0,0,0,1);
             end
+
+            if element.type == Enum.type.circle then
+                love.graphics.circle("fill", element.x, element.y, element.radius);
+            end
+
+            if element.type == Enum.type.image then
+                love.graphics.draw(element.source, element.x, element.y);
+            end
+
+            love.graphics.setColor(1,1,1,1);
         end
     end
 end
