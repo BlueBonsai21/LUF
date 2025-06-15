@@ -17,6 +17,13 @@ local UI = {
             children = {},
             cache = {},
         },
+        __tostring = function(t)
+            local str = "";
+            for i, v in pairs(t) do
+                str = str .. i .. ": " .. tostring(v) .. "\n";
+            end
+            return str;
+        end
     },
     active = {},
 };
