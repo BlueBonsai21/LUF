@@ -19,7 +19,7 @@ function Math.vec2(x,y)
     local vec = {};
     setmetatable(vec, {
         __tostring = function(t)
-            return unpack(t);
+            return "(" .. t.x .. ", " .. t.y .. ")";
         end
     });
 
